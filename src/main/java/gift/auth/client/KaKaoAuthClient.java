@@ -12,18 +12,19 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.HttpServerErrorException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 @Component
 public class KaKaoAuthClient {
 
     private final KaKaoProperties kaKaoProperties;
+    private final RestTemplate restTemplate;
 
-    public KaKaoAuthClient(KaKaoProperties kaKaoProperties) {
+    public KaKaoAuthClient(KaKaoProperties kaKaoProperties, RestTemplate restTemplate) {
         this.kaKaoProperties = kaKaoProperties;
+        this.restTemplate = restTemplate;
     }
-
-    private final RestTemplate restTemplate = new RestTemplate();
 
     public String buildLoginUrl() {
         return "https://kauth.kakao.com/oauth/authorize?response_type=code"
@@ -62,7 +63,10 @@ public class KaKaoAuthClient {
 
         } catch (HttpClientErrorException | HttpServerErrorException ex) {
             throw new CustomException(ErrorCode.KAKAO_TOKEN_REQUEST_FAILED);
+        } catch (ResourceAccessException ex) {
+            throw new CustomException(ErrorCode.KAKAO_CONNECTION_FAILED);
         }
+
     }
 
     public String requestUserEmail(String accessToken) {
@@ -91,6 +95,8 @@ public class KaKaoAuthClient {
 
         } catch (HttpClientErrorException | HttpServerErrorException ex) {
             throw new CustomException(ErrorCode.KAKAO_USER_INFO_REQUEST_FAILED);
+        } catch (ResourceAccessException ex) {
+            throw new CustomException(ErrorCode.KAKAO_CONNECTION_FAILED);
         }
     }
 
