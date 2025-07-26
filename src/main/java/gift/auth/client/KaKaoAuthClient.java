@@ -5,8 +5,9 @@ import gift.auth.dto.KaKaoTokenResponse;
 import gift.auth.dto.KaKaoUserInfoResponse;
 import gift.global.exception.CustomException;
 import gift.global.exception.ErrorCode;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
@@ -32,6 +33,11 @@ public class KaKaoAuthClient {
                 + "&redirect_uri=" + kaKaoProperties.getRedirectUri();
     }
 
+    @Retryable(
+            value = {CustomException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 2000)
+    )
     public String requestAccessToken(String code) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -69,6 +75,11 @@ public class KaKaoAuthClient {
 
     }
 
+    @Retryable(
+            value = {CustomException.class},
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 2000)
+    )
     public String requestUserEmail(String accessToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
