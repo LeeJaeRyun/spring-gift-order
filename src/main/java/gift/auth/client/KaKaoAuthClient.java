@@ -5,6 +5,7 @@ import gift.auth.dto.KaKaoTokenResponse;
 import gift.auth.dto.KaKaoUserInfoResponse;
 import gift.global.exception.CustomException;
 import gift.global.exception.ErrorCode;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.http.*;
 import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Retryable;
@@ -38,6 +39,7 @@ public class KaKaoAuthClient {
             maxAttempts = 3,
             backoff = @Backoff(delay = 2000)
     )
+    @CircuitBreaker(name = "kakaoAccessToken", fallbackMethod = "fallbackAccessToken")
     public String requestAccessToken(String code) {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -75,11 +77,16 @@ public class KaKaoAuthClient {
 
     }
 
+    public String fallbackAccessToken(String code, Throwable t) {
+        throw new CustomException(ErrorCode.KAKAO_SERVICE_UNAVAILABLE);
+    }
+
     @Retryable(
             value = {CustomException.class},
             maxAttempts = 3,
             backoff = @Backoff(delay = 2000)
     )
+    @CircuitBreaker(name = "kakaoUserEmail", fallbackMethod = "fallbackUserEmail")
     public String requestUserEmail(String accessToken) {
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
@@ -109,6 +116,10 @@ public class KaKaoAuthClient {
         } catch (ResourceAccessException ex) {
             throw new CustomException(ErrorCode.KAKAO_CONNECTION_FAILED);
         }
+    }
+
+    public String fallbackUserEmail(String accessToken, Throwable t) {
+        throw new CustomException(ErrorCode.KAKAO_SERVICE_UNAVAILABLE);
     }
 
 }
