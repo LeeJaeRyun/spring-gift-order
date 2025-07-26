@@ -2,6 +2,8 @@ package gift.auth.client;
 
 import gift.auth.dto.KaKaoTokenResponse;
 import gift.auth.dto.KaKaoUserInfoResponse;
+import gift.global.exception.CustomException;
+import gift.global.exception.ErrorCode;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -47,7 +49,7 @@ public class KaKaoAuthClient {
 
         KaKaoTokenResponse tokenResponse = response.getBody();
         if (tokenResponse == null || tokenResponse.accessToken() == null) {
-            throw new RuntimeException("카카오 토큰 요청 실패");
+            throw new CustomException(ErrorCode.KAKAO_TOKEN_REQUEST_FAILED);
         }
 
         return tokenResponse.accessToken();
@@ -67,7 +69,7 @@ public class KaKaoAuthClient {
 
         KaKaoUserInfoResponse userInfo = response.getBody();
         if (userInfo == null || userInfo.kakaoAccount() == null || userInfo.kakaoAccount().get("email") == null) {
-            throw new RuntimeException("카카오 사용자 이메일 정보를 찾을 수 없습니다.");
+            throw new CustomException(ErrorCode.KAKAO_USER_INFO_REQUEST_FAILED);
         }
 
         return (String) userInfo.kakaoAccount().get("email");
