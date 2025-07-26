@@ -1,5 +1,6 @@
 package gift.auth.client;
 
+import gift.auth.config.KaKaoProperties;
 import gift.auth.dto.KaKaoTokenResponse;
 import gift.auth.dto.KaKaoUserInfoResponse;
 import gift.global.exception.CustomException;
@@ -16,21 +17,18 @@ import org.springframework.web.client.RestTemplate;
 @Component
 public class KaKaoAuthClient {
 
-    @Value("${kakao.client-id}")
-    private String clientId;
+    private final KaKaoProperties kaKaoProperties;
 
-    @Value("${kakao.client-secret}")
-    private String clientSecret;
-
-    @Value("${kakao.redirect-uri}")
-    private String redirectUri;
+    public KaKaoAuthClient(KaKaoProperties kaKaoProperties) {
+        this.kaKaoProperties = kaKaoProperties;
+    }
 
     private final RestTemplate restTemplate = new RestTemplate();
 
     public String buildLoginUrl() {
         return "https://kauth.kakao.com/oauth/authorize?response_type=code"
-                + "&client_id=" + clientId
-                + "&redirect_uri=" + redirectUri;
+                + "&client_id=" + kaKaoProperties.getClientId()
+                + "&redirect_uri=" + kaKaoProperties.getRedirectUri();
     }
 
     public String requestAccessToken(String code) {
@@ -39,10 +37,10 @@ public class KaKaoAuthClient {
 
         MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
         body.add("grant_type", "authorization_code");
-        body.add("client_id", clientId);
-        body.add("redirect_uri", redirectUri);
+        body.add("client_id", kaKaoProperties.getClientId());
+        body.add("redirect_uri", kaKaoProperties.getRedirectUri());
         body.add("code", code);
-        body.add("client_secret", clientSecret);
+        body.add("client_secret", kaKaoProperties.getClientSecret());
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
 
