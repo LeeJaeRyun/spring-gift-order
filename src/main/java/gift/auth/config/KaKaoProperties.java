@@ -22,4 +22,16 @@ public class KaKaoProperties {
     public String getRedirectUri() {
         return redirectUri;
     }
+
+    public void setClientId(String clientId) {
+        this.clientId = clientId;
+    }
+
+    public void setClientSecret(String clientSecret) {
+        this.clientSecret = clientSecret;
+    }
+
+    public void setRedirectUri(String redirectUri) {
+        this.redirectUri = redirectUri;
+    }
 }
