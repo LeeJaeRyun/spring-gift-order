@@ -24,6 +24,10 @@ dependencies {
     implementation 'org.springframework.retry:spring-retry'
     implementation 'io.github.resilience4j:resilience4j-spring-boot3:2.3.0'
 
+    //lombok
+    compileOnly 'org.projectlombok:lombok:1.18.38'
+    annotationProcessor 'org.projectlombok:lombok:1.18.38'
+
     //BCrypt 라이브러리
     implementation 'org.springframework.security:spring-security-crypto:6.5.1'
 
