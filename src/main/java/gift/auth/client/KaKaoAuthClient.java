@@ -44,7 +44,7 @@ public class KaKaoAuthClient {
     @Retryable(
             value = {KaKaoException.class},
             maxAttempts = 3,
-            backoff = @Backoff(delay = 2000)
+            backoff = @Backoff(delay = 1000)
     )
     @CircuitBreaker(name = "kakaoAccessToken", fallbackMethod = "fallbackAccessToken")
     public KaKaoTokenResponse requestAccessToken(String code) {
@@ -93,7 +93,7 @@ public class KaKaoAuthClient {
     @Retryable(
             value = {KaKaoException.class},
             maxAttempts = 3,
-            backoff = @Backoff(delay = 2000)
+            backoff = @Backoff(delay = 1000)
     )
     @CircuitBreaker(name = "kakaoUserEmail", fallbackMethod = "fallbackUserEmail")
     public String requestUserEmail(String accessToken) {
