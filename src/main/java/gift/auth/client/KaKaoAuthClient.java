@@ -26,6 +26,7 @@ public class KaKaoAuthClient {
 
     private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
     private static final String KAKAO_USER_INFO_URL = "https://kapi.kakao.com/v2/user/me";
+    private static final String KAKAO_LOGIN_BASE_URL = "https://kauth.kakao.com/oauth/authorize?response_type=code";
 
     private final KaKaoProperties kaKaoProperties;
     private final RestTemplate restTemplate;
@@ -36,7 +37,7 @@ public class KaKaoAuthClient {
     }
 
     public String buildLoginUrl() {
-        return "https://kauth.kakao.com/oauth/authorize?response_type=code"
+        return KAKAO_LOGIN_BASE_URL
                 + "&client_id=" + kaKaoProperties.getClientId()
                 + "&redirect_uri=" + kaKaoProperties.getRedirectUri();
     }
