@@ -6,7 +6,6 @@ import gift.auth.dto.KaKaoUserInfoResponse;
 import gift.auth.exception.KaKaoErrorCode;
 import gift.auth.exception.KaKaoException;
 import gift.global.exception.CustomException;
-import gift.global.exception.ErrorCode;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
