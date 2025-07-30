@@ -42,7 +42,7 @@ public class KaKaoAuthClient {
     }
 
     @Retryable(
-            value = {CustomException.class},
+            value = {KaKaoException.class},
             maxAttempts = 3,
             backoff = @Backoff(delay = 2000)
     )
@@ -91,7 +91,7 @@ public class KaKaoAuthClient {
     }
 
     @Retryable(
-            value = {CustomException.class},
+            value = {KaKaoException.class},
             maxAttempts = 3,
             backoff = @Backoff(delay = 2000)
     )
