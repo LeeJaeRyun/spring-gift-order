@@ -48,7 +48,7 @@ public class KaKaoAuthClient {
             backoff = @Backoff(delay = 2000)
     )
     @CircuitBreaker(name = "kakaoAccessToken", fallbackMethod = "fallbackAccessToken")
-    public String requestAccessToken(String code) {
+    public KaKaoTokenResponse requestAccessToken(String code) {
         log.info("[카카오] 액세스 토큰 요청 시작, code: {}", code);
 
         HttpEntity<MultiValueMap<String, String>> request = buildTokenRequestEntity(code);
@@ -75,7 +75,7 @@ public class KaKaoAuthClient {
                 throw new KaKaoException(KaKaoErrorCode.TOKEN_REQUEST_FAILED);
             }
 
-            return tokenResponse.accessToken();
+            return tokenResponse;
 
         } catch (HttpClientErrorException | HttpServerErrorException ex) {
             log.error("[카카오] API 요청 실패: {}", ex.getMessage());

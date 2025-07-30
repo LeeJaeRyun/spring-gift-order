@@ -1,10 +1,10 @@
 package gift.auth.service;
 
 import gift.auth.client.KaKaoAuthClient;
+import gift.auth.dto.KaKaoTokenResponse;
 import gift.member.auth.JwtProvider;
 import gift.member.entity.Member;
 import gift.member.repository.MemberRepository;
-import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import java.util.UUID;
 
@@ -26,12 +26,15 @@ public class KaKaoAuthService {
     }
 
     public String loginWithCode(String code) {
-        String accessToken = kakaoAuthClient.requestAccessToken(code);
+        KaKaoTokenResponse kakaoTokenResponse = kakaoAuthClient.requestAccessToken(code);
+        String accessToken = kakaoTokenResponse.accessToken();
+        int kakaoExpiresIn = kakaoTokenResponse.expiresIn();
+
         String email = kakaoAuthClient.requestUserEmail(accessToken);
 
         Member member = memberRepository.findByEmail(email)
                 .orElseGet(() -> memberRepository.save(new Member(email, UUID.randomUUID().toString())));
 
-        return jwtProvider.createToken(member);
+        return jwtProvider.createToken(member, kakaoExpiresIn);
     }
 }
