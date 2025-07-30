@@ -22,6 +22,9 @@ import org.springframework.web.client.RestTemplate;
 @Component
 public class KaKaoAuthClient {
 
+    private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
+    private static final String KAKAO_USER_INFO_URL = "https://kapi.kakao.com/v2/user/me";
+
     private final KaKaoProperties kaKaoProperties;
     private final RestTemplate restTemplate;
 
@@ -45,21 +48,14 @@ public class KaKaoAuthClient {
     public String requestAccessToken(String code) {
         log.info("[카카오] 액세스 토큰 요청 시작, code: {}", code);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "authorization_code");
-        body.add("client_id", kaKaoProperties.getClientId());
-        body.add("redirect_uri", kaKaoProperties.getRedirectUri());
-        body.add("code", code);
-        body.add("client_secret", kaKaoProperties.getClientSecret());
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+        HttpEntity<MultiValueMap<String, String>> request = buildTokenRequestEntity(code);
 
         try {
-            ResponseEntity<KaKaoTokenResponse> response = restTemplate.postForEntity(
-                    "https://kauth.kakao.com/oauth/token", request, KaKaoTokenResponse.class
+            ResponseEntity<KaKaoTokenResponse> response = restTemplate.exchange(
+                    KAKAO_TOKEN_URL,
+                    HttpMethod.POST,
+                    request,
+                    KaKaoTokenResponse.class
             );
 
             log.info("[카카오] 응답 상태 코드: {}", response.getStatusCode());
@@ -107,7 +103,7 @@ public class KaKaoAuthClient {
         HttpEntity<Void> request = new HttpEntity<>(headers);
         try {
             ResponseEntity<KaKaoUserInfoResponse> response = restTemplate.exchange(
-                    "https://kapi.kakao.com/v2/user/me",
+                    KAKAO_USER_INFO_URL,
                     HttpMethod.GET,
                     request,
                     KaKaoUserInfoResponse.class
@@ -136,6 +132,20 @@ public class KaKaoAuthClient {
 
     public String fallbackUserEmail(String accessToken, Throwable t) {
         throw new CustomException(ErrorCode.KAKAO_SERVICE_UNAVAILABLE);
+    }
+
+    private HttpEntity<MultiValueMap<String, String>> buildTokenRequestEntity(String code) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "authorization_code");
+        body.add("client_id", kaKaoProperties.getClientId());
+        body.add("redirect_uri", kaKaoProperties.getRedirectUri());
+        body.add("code", code);
+        body.add("client_secret", kaKaoProperties.getClientSecret());
+
+        return new HttpEntity<>(body, headers);
     }
 
 }
