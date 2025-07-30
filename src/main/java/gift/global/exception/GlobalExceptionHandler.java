@@ -11,24 +11,23 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ErrorResponseDto> handleCustomException(CustomException e) {
-        ErrorCode errorCode = e.getErrorCode();
-        return ResponseEntity
-                .status(errorCode.getHttpStatus())
-                .body(new ErrorResponseDto(
-                        errorCode.getMessage(),
-                        errorCode.getHttpStatus().value()
-                ));
+        return buildErrorResponse(
+                e.getErrorCode().getMessage(),
+                e.getErrorCode().getHttpStatus().value()
+        );
     }
 
     @ExceptionHandler(KaKaoException.class)
     public ResponseEntity<ErrorResponseDto> handleKaKaoException(KaKaoException e) {
-        KaKaoErrorCode errorCode = e.getErrorCode();
-        return ResponseEntity
-                .status(errorCode.getHttpStatus())
-                .body(new ErrorResponseDto(
-                        errorCode.getMessage(),
-                        errorCode.getHttpStatus().value()
-                ));
+        return buildErrorResponse(
+                e.getErrorCode().getMessage(),
+                e.getErrorCode().getHttpStatus().value()
+        );
     }
 
+    private ResponseEntity<ErrorResponseDto> buildErrorResponse(String message, int statusCode) {
+        return ResponseEntity
+                .status(statusCode)
+                .body(new ErrorResponseDto(message, statusCode));
+    }
 }
