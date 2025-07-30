@@ -14,8 +14,7 @@ public class GlobalExceptionHandler {
                 .status(errorCode.getHttpStatus())
                 .body(new ErrorResponseDto(
                         errorCode.getMessage(),
-                        errorCode.getHttpStatus().value(),
-                        errorCode.getCode()
+                        errorCode.getHttpStatus().value()
                 ));
     }
 
