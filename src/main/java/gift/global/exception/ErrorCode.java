@@ -21,15 +21,7 @@ public enum ErrorCode {
     // 404 NOT FOUND
     ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "상품이 존재하지 않습니다."),
     MEMBER_NOT_FOUND(HttpStatus.NOT_FOUND, "회원이 존재하지 않습니다."),
-    WISH_NOT_FOUND(HttpStatus.NOT_FOUND, "위시리스트에 존재하지 않는 상품입니다."),
-
-    // 500 Internal Server Error
-    KAKAO_TOKEN_REQUEST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "카카오 토큰 요청에 실패했습니다."),
-    KAKAO_USER_INFO_REQUEST_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "카카오 사용자 정보 요청에 실패했습니다."),
-    KAKAO_CONNECTION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, "카카오 서버와의 연결에 실패했습니다."),
-
-    // 503 Service Unavailable
-    KAKAO_SERVICE_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "카카오 서비스가 일시적으로 불가능합니다. 잠시 후 다시 시도해주세요.");
+    WISH_NOT_FOUND(HttpStatus.NOT_FOUND, "위시리스트에 존재하지 않는 상품입니다.");
 
     private final HttpStatus httpStatus; // HTTP 상태 코드
     private final String message; // 에러 메시지
