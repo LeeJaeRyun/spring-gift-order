@@ -60,13 +60,7 @@ public class OrderService {
         }
 
         // 응답 DTO 생성 후 반환
-        return new OrderResponse(
-                savedOrder.getId(),
-                option.getId(),
-                savedOrder.getQuantity(),
-                savedOrder.getMessage(),
-                savedOrder.getOrderDateTime()
-        );
+        return OrderResponse.of(savedOrder);
     }
 
 }
