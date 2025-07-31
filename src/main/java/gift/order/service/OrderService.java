@@ -6,6 +6,8 @@ import gift.member.entity.Member;
 import gift.order.dto.OrderRequest;
 import gift.order.dto.OrderResponse;
 import gift.order.entity.Order;
+import gift.order.exception.OrderErrorCode;
+import gift.order.exception.OrderException;
 import gift.order.repository.OrderRepository;
 import gift.wishlist.repository.WishlistRepository;
 import lombok.RequiredArgsConstructor;
@@ -32,11 +34,11 @@ public class OrderService {
             String kakaoAccessToken
     ) {
         Option option = optionRepository.findById(request.optionId())
-                .orElseThrow(() -> new IllegalArgumentException("옵션을 찾을 수 없습니다."));
+                .orElseThrow(() -> new OrderException(OrderErrorCode.OPTION_NOT_FOUND));
 
         // 재고 부족 체크
         if (request.quantity() > option.getQuantity()) {
-            throw new IllegalArgumentException("주문 수량이 재고 수량보다 많습니다.");
+            throw new OrderException(OrderErrorCode.EXCEEDS_PURCHASABLE_QUANTITY);
         }
         // 재고 차감
         option.decreaseQuantity(request.quantity());
