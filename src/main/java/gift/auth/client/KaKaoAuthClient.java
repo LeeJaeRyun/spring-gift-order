@@ -3,8 +3,9 @@ package gift.auth.client;
 import gift.auth.config.KaKaoProperties;
 import gift.auth.dto.KaKaoTokenResponse;
 import gift.auth.dto.KaKaoUserInfoResponse;
+import gift.auth.exception.KaKaoErrorCode;
+import gift.auth.exception.KaKaoException;
 import gift.global.exception.CustomException;
-import gift.global.exception.ErrorCode;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
@@ -22,6 +23,10 @@ import org.springframework.web.client.RestTemplate;
 @Component
 public class KaKaoAuthClient {
 
+    private static final String KAKAO_TOKEN_URL = "https://kauth.kakao.com/oauth/token";
+    private static final String KAKAO_USER_INFO_URL = "https://kapi.kakao.com/v2/user/me";
+    private static final String KAKAO_LOGIN_BASE_URL = "https://kauth.kakao.com/oauth/authorize?response_type=code";
+
     private final KaKaoProperties kaKaoProperties;
     private final RestTemplate restTemplate;
 
@@ -31,41 +36,34 @@ public class KaKaoAuthClient {
     }
 
     public String buildLoginUrl() {
-        return "https://kauth.kakao.com/oauth/authorize?response_type=code"
+        return KAKAO_LOGIN_BASE_URL
                 + "&client_id=" + kaKaoProperties.getClientId()
                 + "&redirect_uri=" + kaKaoProperties.getRedirectUri();
     }
 
     @Retryable(
-            value = {CustomException.class},
+            value = {KaKaoException.class},
             maxAttempts = 3,
-            backoff = @Backoff(delay = 2000)
+            backoff = @Backoff(delay = 1000)
     )
     @CircuitBreaker(name = "kakaoAccessToken", fallbackMethod = "fallbackAccessToken")
-    public String requestAccessToken(String code) {
+    public KaKaoTokenResponse requestAccessToken(String code) {
         log.info("[카카오] 액세스 토큰 요청 시작, code: {}", code);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "authorization_code");
-        body.add("client_id", kaKaoProperties.getClientId());
-        body.add("redirect_uri", kaKaoProperties.getRedirectUri());
-        body.add("code", code);
-        body.add("client_secret", kaKaoProperties.getClientSecret());
-
-        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+        HttpEntity<MultiValueMap<String, String>> request = buildTokenRequestEntity(code);
 
         try {
-            ResponseEntity<KaKaoTokenResponse> response = restTemplate.postForEntity(
-                    "https://kauth.kakao.com/oauth/token", request, KaKaoTokenResponse.class
+            ResponseEntity<KaKaoTokenResponse> response = restTemplate.exchange(
+                    KAKAO_TOKEN_URL,
+                    HttpMethod.POST,
+                    request,
+                    KaKaoTokenResponse.class
             );
 
             log.info("[카카오] 응답 상태 코드: {}", response.getStatusCode());
 
             if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new CustomException(ErrorCode.KAKAO_TOKEN_REQUEST_FAILED);
+                throw new KaKaoException(KaKaoErrorCode.TOKEN_REQUEST_FAILED);
             }
 
             KaKaoTokenResponse tokenResponse = response.getBody();
@@ -73,29 +71,29 @@ public class KaKaoAuthClient {
 
             if (tokenResponse == null || tokenResponse.accessToken() == null) {
                 log.error("[카카오] 토큰 응답 실패: {}", response);
-                throw new CustomException(ErrorCode.KAKAO_TOKEN_REQUEST_FAILED);
+                throw new KaKaoException(KaKaoErrorCode.TOKEN_REQUEST_FAILED);
             }
 
-            return tokenResponse.accessToken();
+            return tokenResponse;
 
         } catch (HttpClientErrorException | HttpServerErrorException ex) {
             log.error("[카카오] API 요청 실패: {}", ex.getMessage());
-            throw new CustomException(ErrorCode.KAKAO_TOKEN_REQUEST_FAILED);
+            throw new KaKaoException(KaKaoErrorCode.TOKEN_REQUEST_FAILED);
         } catch (ResourceAccessException ex) {
             log.error("[카카오] 연결 실패: {}", ex.getMessage());
-            throw new CustomException(ErrorCode.KAKAO_CONNECTION_FAILED);
+            throw new KaKaoException(KaKaoErrorCode.CONNECTION_FAILED);
         }
 
     }
 
     public String fallbackAccessToken(String code, Throwable t) {
-        throw new CustomException(ErrorCode.KAKAO_SERVICE_UNAVAILABLE);
+        throw new KaKaoException(KaKaoErrorCode.SERVICE_UNAVAILABLE);
     }
 
     @Retryable(
-            value = {CustomException.class},
+            value = {KaKaoException.class},
             maxAttempts = 3,
-            backoff = @Backoff(delay = 2000)
+            backoff = @Backoff(delay = 1000)
     )
     @CircuitBreaker(name = "kakaoUserEmail", fallbackMethod = "fallbackUserEmail")
     public String requestUserEmail(String accessToken) {
@@ -107,7 +105,7 @@ public class KaKaoAuthClient {
         HttpEntity<Void> request = new HttpEntity<>(headers);
         try {
             ResponseEntity<KaKaoUserInfoResponse> response = restTemplate.exchange(
-                    "https://kapi.kakao.com/v2/user/me",
+                    KAKAO_USER_INFO_URL,
                     HttpMethod.GET,
                     request,
                     KaKaoUserInfoResponse.class
@@ -115,27 +113,41 @@ public class KaKaoAuthClient {
             log.info("[카카오] 응답 상태: {}", response.getStatusCode());
 
             if (!response.getStatusCode().is2xxSuccessful()) {
-                throw new CustomException(ErrorCode.KAKAO_USER_INFO_REQUEST_FAILED);
+                throw new KaKaoException(KaKaoErrorCode.USER_INFO_REQUEST_FAILED);
             }
 
             KaKaoUserInfoResponse userInfo = response.getBody();
             if (userInfo == null || userInfo.kakaoAccount() == null || userInfo.kakaoAccount().get("email") == null) {
-                throw new CustomException(ErrorCode.KAKAO_USER_INFO_REQUEST_FAILED);
+                throw new KaKaoException(KaKaoErrorCode.USER_INFO_REQUEST_FAILED);
             }
 
             return (String) userInfo.kakaoAccount().get("email");
 
         } catch (HttpClientErrorException | HttpServerErrorException ex) {
             log.error("[카카오] API 요청 실패: {}", ex.getMessage());
-            throw new CustomException(ErrorCode.KAKAO_USER_INFO_REQUEST_FAILED);
+            throw new KaKaoException(KaKaoErrorCode.USER_INFO_REQUEST_FAILED);
         } catch (ResourceAccessException ex) {
             log.error("[카카오] 연결 실패: {}", ex.getMessage());
-            throw new CustomException(ErrorCode.KAKAO_CONNECTION_FAILED);
+            throw new KaKaoException(KaKaoErrorCode.CONNECTION_FAILED);
         }
     }
 
     public String fallbackUserEmail(String accessToken, Throwable t) {
-        throw new CustomException(ErrorCode.KAKAO_SERVICE_UNAVAILABLE);
+        throw new KaKaoException(KaKaoErrorCode.SERVICE_UNAVAILABLE);
+    }
+
+    private HttpEntity<MultiValueMap<String, String>> buildTokenRequestEntity(String code) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("grant_type", "authorization_code");
+        body.add("client_id", kaKaoProperties.getClientId());
+        body.add("redirect_uri", kaKaoProperties.getRedirectUri());
+        body.add("code", code);
+        body.add("client_secret", kaKaoProperties.getClientSecret());
+
+        return new HttpEntity<>(body, headers);
     }
 
 }

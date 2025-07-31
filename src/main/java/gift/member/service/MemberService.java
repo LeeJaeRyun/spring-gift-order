@@ -8,6 +8,7 @@ import gift.member.dto.MemberRegisterRequestDto;
 import gift.member.dto.TokenResponseDto;
 import gift.member.entity.Member;
 import gift.member.repository.MemberRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,13 +19,16 @@ public class MemberService {
     private final MemberRepository memberRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final int defaultExpiration;
 
     public MemberService(MemberRepository memberRepository,
                          PasswordEncoder passwordEncoder,
-                         JwtProvider jwtProvider) {
+                         JwtProvider jwtProvider,
+                         @Value("${jwt.expiration}") int defaultExpiration) {
         this.memberRepository = memberRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtProvider = jwtProvider;
+        this.defaultExpiration = defaultExpiration;
     }
 
     /**
@@ -54,7 +58,7 @@ public class MemberService {
             throw new CustomException(ErrorCode.WRONG_PASSWORD);
         }
 
-        String token = jwtProvider.createToken(member);
+        String token = jwtProvider.createToken(member, defaultExpiration);
         return new TokenResponseDto(token);
     }
 }
