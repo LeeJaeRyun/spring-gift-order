@@ -2,6 +2,7 @@ package gift.order.entity;
 
 import gift.item.entity.Option;
 import gift.member.entity.Member;
+import gift.order.dto.OrderRequest;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -42,6 +43,16 @@ public class Order {
         this.quantity = quantity;
         this.message = message;
         this.orderDateTime = orderDateTime;
+    }
+
+    public static Order of(Member member, Option option, OrderRequest request, LocalDateTime now) {
+        return new Order(
+                member,
+                option,
+                request.quantity(),
+                request.message(),
+                now
+        );
     }
 
 }

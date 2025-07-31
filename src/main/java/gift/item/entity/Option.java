@@ -40,6 +40,10 @@ public class Option {
         return quantity;
     }
 
+    public Item getItem() {
+        return item;
+    }
+
     public Option(String name, Integer quantity, Item item) {
         this.name = name;
         this.quantity = quantity;

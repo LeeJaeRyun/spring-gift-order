@@ -6,7 +6,7 @@ public record OrderResponse(
         Long id,
         Long optionId,
         int quantity,
-        LocalDateTime orderDateTime,
-        String message
+        String message,
+        LocalDateTime orderDateTime
 ) {
 }
