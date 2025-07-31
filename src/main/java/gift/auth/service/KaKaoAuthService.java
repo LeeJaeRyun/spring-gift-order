@@ -1,6 +1,7 @@
 package gift.auth.service;
 
 import gift.auth.client.KaKaoAuthClient;
+import gift.auth.dto.KaKaoLoginResponse;
 import gift.auth.dto.KaKaoTokenResponse;
 import gift.member.auth.JwtProvider;
 import gift.member.entity.Member;
@@ -25,16 +26,17 @@ public class KaKaoAuthService {
         return kakaoAuthClient.buildLoginUrl();
     }
 
-    public String loginWithCode(String code) {
+    public KaKaoLoginResponse loginWithCode(String code) {
         KaKaoTokenResponse kakaoTokenResponse = kakaoAuthClient.requestAccessToken(code);
-        String accessToken = kakaoTokenResponse.accessToken();
-        int kakaoExpiresIn = kakaoTokenResponse.expiresIn();
+        String kakaoAccessToken = kakaoTokenResponse.accessToken();
 
-        String email = kakaoAuthClient.requestUserEmail(accessToken);
+        String email = kakaoAuthClient.requestUserEmail(kakaoAccessToken);
 
         Member member = memberRepository.findByEmail(email)
                 .orElseGet(() -> memberRepository.save(new Member(email, UUID.randomUUID().toString())));
 
-        return jwtProvider.createToken(member, kakaoExpiresIn);
+        String jwtToken = jwtProvider.createToken(member, kakaoTokenResponse.expiresIn());
+
+        return new KaKaoLoginResponse(jwtToken, kakaoAccessToken);
     }
 }

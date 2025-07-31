@@ -1,5 +1,6 @@
 package gift.auth.controller;
 
+import gift.auth.dto.KaKaoLoginResponse;
 import gift.auth.service.KaKaoAuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -26,8 +27,8 @@ public class KaKaoAuthController {
 
     // 카카오에서 인가코드 받고 로그인 처리 후 JWT 반환
     @GetMapping("/callback")
-    public ResponseEntity<String> kakaoCallback(@RequestParam("code") String code) {
-        String jwt = kaKaoAuthService.loginWithCode(code);
-        return ResponseEntity.ok(jwt);
+    public ResponseEntity<KaKaoLoginResponse> kakaoCallback(@RequestParam("code") String code) {
+        KaKaoLoginResponse kaKaoLoginResponse = kaKaoAuthService.loginWithCode(code);
+        return ResponseEntity.ok(kaKaoLoginResponse);
     }
 }
