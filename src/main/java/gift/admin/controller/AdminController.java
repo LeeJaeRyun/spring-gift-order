@@ -98,4 +98,10 @@ public class AdminController {
         return "option-create";
     }
 
+    //로그인 페이지
+    @GetMapping("/login")
+    public String showLoginPage() {
+        return "login";
+    }
+
 }
