@@ -7,6 +7,8 @@ import gift.member.auth.JwtProvider;
 import gift.member.entity.Member;
 import gift.member.repository.MemberRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import java.util.UUID;
 
 @Service
@@ -26,6 +28,7 @@ public class KaKaoAuthService {
         return kakaoAuthClient.buildLoginUrl();
     }
 
+    @Transactional
     public KaKaoLoginResponse loginWithCode(String code) {
         KaKaoTokenResponse kakaoTokenResponse = kakaoAuthClient.requestAccessToken(code);
         String kakaoAccessToken = kakaoTokenResponse.accessToken();
@@ -35,8 +38,10 @@ public class KaKaoAuthService {
         Member member = memberRepository.findByEmail(email)
                 .orElseGet(() -> memberRepository.save(new Member(email, UUID.randomUUID().toString())));
 
+        member.setKakaoAccessToken(kakaoAccessToken);
+
         String jwtToken = jwtProvider.createToken(member, kakaoTokenResponse.expiresIn());
 
-        return new KaKaoLoginResponse(jwtToken, kakaoAccessToken);
+        return new KaKaoLoginResponse(jwtToken);
     }
 }

@@ -30,8 +30,7 @@ public class OrderService {
     @Transactional
     public OrderResponse createOrder(
             Member member,
-            OrderRequest request,
-            String kakaoAccessToken
+            OrderRequest request
     ) {
         Option option = optionRepository.findById(request.optionId())
                 .orElseThrow(() -> new OrderException(OrderErrorCode.OPTION_NOT_FOUND));
@@ -54,6 +53,7 @@ public class OrderService {
 
         // 카카오 메시지 전송
         try {
+            String kakaoAccessToken = member.getKakaoAccessToken();
             if (kakaoAccessToken != null && !kakaoAccessToken.isEmpty()) {
                 kakaoMessageService.sendOrderConfirmation(kakaoAccessToken, savedOrder);
             }

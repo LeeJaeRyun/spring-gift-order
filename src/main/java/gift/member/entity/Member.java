@@ -16,6 +16,9 @@ public class Member {
     @Column(nullable = false)
     private String password;
 
+    @Column(name = "kakao_access_token")
+    private String kakaoAccessToken;
+
     protected Member() {
 
     }
@@ -36,4 +39,14 @@ public class Member {
     public String getPassword() {
         return password;
     }
+
+    public String getKakaoAccessToken() {
+        return kakaoAccessToken;
+    }
+
+    public void setKakaoAccessToken(String kakaoAccessToken) {
+        this.kakaoAccessToken = kakaoAccessToken;
+    }
+
+
 }
